@@ -1,0 +1,19 @@
+{
+  "name": "Violet AI Personal Assistant",
+  "short_name": "Violet",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#0c0a09",
+  "theme_color": "#6366f1",
+  "description": "Context-aware AI Personal Assistant unified dashboard.",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

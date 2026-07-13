@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: violet-postgres
+    environment:
+      POSTGRES_USER: violet_user
+      POSTGRES_PASSWORD: violet_secure_password
+      POSTGRES_DB: violet_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: always
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - uploads-data:/app/uploads
+    environment:
+      - DATABASE_URL=postgresql://violet_user:violet_secure_password@db:5432/violet_db
+      - JWT_SECRET_KEY=prod_super_secure_secret_key_violet_assistant_2026_jwt_token_signing
+      - JWT_REFRESH_SECRET_KEY=prod_super_secure_refresh_secret_key_violet_assistant_2026_jwt_token_signing
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - REFRESH_TOKEN_EXPIRE_DAYS=7
+    depends_on:
+      - db
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    environment:
+      - VITE_API_URL=http://localhost/api/v1
+    depends_on:
+      - backend
+    restart: always
+
+volumes:
+  postgres-data:
+  uploads-data:

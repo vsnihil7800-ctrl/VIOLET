@@ -1,0 +1,32 @@
+# Python Build and Caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+venv/
+env/
+ENV/
+*.db
+*.sqlite
+backend/test.db
+backend/violet.db
+backend/uploads/
+
+# Node / Frontend Build and Caches
+node_modules/
+dist/
+dist-ssr/
+*.local
+.eslintcache
+
+# Environment Secrets and Local Configurations
+.env
+.env.production
+.env.development
+.env.local
+
+# OS Temp Files
+.DS_Store
+Thumbs.db
+Desktop.ini
