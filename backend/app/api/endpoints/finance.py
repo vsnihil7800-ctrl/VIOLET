@@ -51,8 +51,11 @@ def read_transactions(
         
     total = query.count()
     items = query.order_by(Transaction.date.desc()).offset(offset).limit(limit).all()
-    
-    return {"items": items, "total": total}
+
+    return {
+        "items": [TransactionResponse.model_validate(t) for t in items],
+        "total": total,
+    }
 
 @router.post("/transactions", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED)
 def create_transaction(
