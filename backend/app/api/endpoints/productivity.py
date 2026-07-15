@@ -2,8 +2,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from sqlalchemy import func
-
+from sqlalchemy import func, case
 from app.api import deps
 from app.core.database import get_db
 from app.models.user import User
@@ -290,7 +289,7 @@ def read_productivity_summary(
         TodoItem.user_id == current_user.id,
         TodoItem.completed == False
     ).order_by(
-        func.case(
+        case(
             (TodoItem.priority == "high", 1),
             (TodoItem.priority == "medium", 2),
             else_=3
