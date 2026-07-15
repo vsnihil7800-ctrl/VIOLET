@@ -230,7 +230,7 @@ export const Finance: React.FC = () => {
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
             <span className="text-[10px] uppercase font-semibold text-muted-foreground">Expenses</span>
-            <span className="text-base font-extrabold">${summary.total_expenses.toFixed(0)}</span>
+            <span className="text-base font-extrabold">₹{summary.total_expenses.toFixed(0)}</span>
           </div>
         </div>
 
@@ -280,7 +280,7 @@ export const Finance: React.FC = () => {
           <div>
             <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Net Cash Flow</p>
             <p className={`text-xl font-extrabold mt-1 ${(summary?.net_savings ?? 0) >= 0 ? "text-emerald-500" : "text-destructive"}`}>
-              {isSummaryLoading ? "..." : `$${(summary?.net_savings ?? 0).toLocaleString()}`}
+              {isSummaryLoading ? "..." : `₹${(summary?.net_savings ?? 0).toLocaleString()}`}
             </p>
           </div>
           <div className="p-3 bg-primary/10 text-primary rounded-xl">
@@ -293,7 +293,7 @@ export const Finance: React.FC = () => {
           <div>
             <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Monthly Income</p>
             <p className="text-xl font-extrabold mt-1 text-emerald-500">
-              {isSummaryLoading ? "..." : `$${(summary?.total_income ?? 0).toLocaleString()}`}
+              {isSummaryLoading ? "..." : `₹${(summary?.total_income ?? 0).toLocaleString()}`}
             </p>
           </div>
           <div className="p-3 bg-emerald-500/10 text-emerald-500 rounded-xl">
@@ -306,7 +306,7 @@ export const Finance: React.FC = () => {
           <div>
             <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Monthly Expenses</p>
             <p className="text-xl font-extrabold mt-1 text-destructive">
-              {isSummaryLoading ? "..." : `$${(summary?.total_expenses ?? 0).toLocaleString()}`}
+              {isSummaryLoading ? "..." : `₹${(summary?.total_expenses ?? 0).toLocaleString()}`}
             </p>
           </div>
           <div className="p-3 bg-rose-500/10 text-rose-500 rounded-xl">
@@ -319,13 +319,13 @@ export const Finance: React.FC = () => {
           <div className="flex justify-between items-center pb-2 border-b border-border/50">
             <span className="text-[10px] text-muted-foreground uppercase font-bold">Owed to Me</span>
             <span className="text-xs font-bold text-emerald-500">
-              {isSummaryLoading ? "..." : `$${summary?.total_owed_to_me}`}
+              {isSummaryLoading ? "..." : `₹${summary?.total_owed_to_me}`}
             </span>
           </div>
           <div className="flex justify-between items-center pt-2">
             <span className="text-[10px] text-muted-foreground uppercase font-bold">Money I Owe</span>
             <span className="text-xs font-bold text-destructive">
-              {isSummaryLoading ? "..." : `$${summary?.total_owed_by_me}`}
+              {isSummaryLoading ? "..." : `₹${summary?.total_owed_by_me}`}
             </span>
           </div>
         </div>
@@ -448,7 +448,7 @@ export const Finance: React.FC = () => {
                               {new Date(tx.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                             </td>
                             <td className={`py-2.5 font-bold ${tx.type === "income" ? "text-emerald-500" : "text-foreground"}`}>
-                              {tx.type === "income" ? "+" : "-"}${tx.amount.toFixed(2)}
+                              {tx.type === "income" ? "+" : "-"}₹{tx.amount.toFixed(2)}
                             </td>
                             <td className="py-2.5 text-muted-foreground max-w-[120px] truncate hidden sm:table-cell">
                               {tx.description || "—"}
@@ -541,7 +541,7 @@ export const Finance: React.FC = () => {
                           <h5 className="font-bold text-xs uppercase text-foreground">{b.category === "All" ? "Overall Limit" : b.category}</h5>
                           <div className="flex justify-between items-baseline mt-2 mb-1.5">
                             <span className="text-xs text-muted-foreground">
-                              Spent <strong>${b.spent.toFixed(0)}</strong> of ${b.limit_amount}
+                              Spent <strong>₹{b.spent.toFixed(0)}</strong> of ₹{b.limit_amount}
                             </span>
                             <span className={`text-xs font-bold ${isOver ? "text-rose-500" : isNear ? "text-amber-500" : "text-emerald-500"}`}>
                               {b.percent}%
@@ -612,7 +612,7 @@ export const Finance: React.FC = () => {
                             </div>
                             <div className="flex items-center gap-2">
                               <span className={`text-xs font-bold ${d.is_settled ? "text-muted-foreground line-through" : "text-emerald-500"}`}>
-                                ${d.amount.toFixed(2)}
+                                ₹{d.amount.toFixed(2)}
                               </span>
                               <button
                                 onClick={() => handleDeleteDebt(d.id)}
@@ -651,7 +651,7 @@ export const Finance: React.FC = () => {
                             </div>
                             <div className="flex items-center gap-2">
                               <span className={`text-xs font-bold ${d.is_settled ? "text-muted-foreground line-through" : "text-destructive"}`}>
-                                ${d.amount.toFixed(2)}
+                                ₹{d.amount.toFixed(2)}
                               </span>
                               <button
                                 onClick={() => handleDeleteDebt(d.id)}
