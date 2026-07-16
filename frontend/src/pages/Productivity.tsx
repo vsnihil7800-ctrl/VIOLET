@@ -175,6 +175,14 @@ export const Productivity: React.FC = () => {
     },
   });
 
+  const deleteStreakMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/productivity/streaks/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["productivityStreaks"] });
+      queryClient.invalidateQueries({ queryKey: ["productivitySummary"] });
+    },
+  });
+
   // ----------------- ACTION HANDLERS -----------------
 
   const handleAddTodo = (e: React.FormEvent) => {
@@ -228,6 +236,12 @@ export const Productivity: React.FC = () => {
   const handleDeleteNote = (id: string) => {
     if (confirm("Are you sure you want to delete this note stickies?")) {
       deleteNoteMutation.mutate(id);
+    }
+  };
+
+  const handleDeleteStreak = (id: string) => {
+    if (confirm("Are you sure you want to delete this coding log entry?")) {
+      deleteStreakMutation.mutate(id);
     }
   };
 
@@ -677,6 +691,7 @@ export const Productivity: React.FC = () => {
                         <th className="py-2.5">Date</th>
                         <th className="py-2.5">Minutes Coded</th>
                         <th className="py-2.5 text-right">Commits Logged</th>
+                        <th className="py-2.5 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -687,6 +702,14 @@ export const Productivity: React.FC = () => {
                           </td>
                           <td className="py-2.5 font-bold text-foreground">{st.minutes_coded} minutes</td>
                           <td className="py-2.5 text-right font-extrabold text-primary">{st.commits_count} commits</td>
+                          <td className="py-2.5 text-right">
+                            <button
+                              onClick={() => handleDeleteStreak(st.id)}
+                              className="p-1 text-muted-foreground hover:text-destructive hover:bg-secondary/40 rounded transition-colors"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
