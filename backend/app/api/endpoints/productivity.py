@@ -3,6 +3,7 @@ from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func, case
+
 from app.api import deps
 from app.core.database import get_db
 from app.models.user import User
@@ -75,7 +76,7 @@ def read_todos(
     ).order_by(
         TodoItem.completed.asc(),
         # custom sorting for priority levels: high, medium, low
-        func.case(
+        case(
             (TodoItem.priority == "high", 1),
             (TodoItem.priority == "medium", 2),
             else_=3
@@ -93,7 +94,7 @@ def create_todo(
     db_todo = TodoItem(
         user_id=current_user.id,
         title=todo_in.title,
-        priority=todo_in.priority.lower(),
+        priority=(todo_in.priority or "medium").lower(),
         due_date=todo_in.due_date
     )
     db.add(db_todo)
