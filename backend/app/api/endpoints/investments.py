@@ -17,9 +17,23 @@ from app.schemas.investment import (
     TickerAllocation,
     InvestmentPortfolio
 )
-from app.services.price_feed import get_live_prices_batch
 
 router = APIRouter()
+
+# Mock live pricing feed for development & AI analytics
+MOCK_PRICES: Dict[str, float] = {
+    "AAPL": 224.50,
+    "MSFT": 435.20,
+    "TSLA": 254.80,
+    "NVDA": 128.30,
+    "AMZN": 184.60,
+    "GOOGL": 178.90,
+    "BTC": 64250.00,
+    "ETH": 3420.50,
+    "SOL": 142.80,
+    "ADA": 0.38,
+    "DOT": 6.20,
+}
 
 # ----------------- Transactions Endpoints -----------------
 
@@ -74,6 +88,26 @@ def create_investment_transaction(
     db.commit()
     db.refresh(db_trade)
     return db_trade
+
+
+@router.delete("/transactions/{transaction_id}", status_code=status.HTTP_200_OK)
+def delete_investment_transaction(
+    transaction_id: str,
+    current_user: User = Depends(deps.get_current_user),
+    db: Session = Depends(get_db)
+) -> Any:
+    """Delete a logged trade transaction. Recomputes holdings/averages on next portfolio fetch."""
+    db_trade = db.query(InvestmentTransaction).filter(
+        InvestmentTransaction.id == transaction_id,
+        InvestmentTransaction.user_id == current_user.id
+    ).first()
+
+    if not db_trade:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+
+    db.delete(db_trade)
+    db.commit()
+    return {"detail": f"Deleted trade record {transaction_id}"}
 
 
 # ----------------- Watchlist Endpoints -----------------
@@ -177,21 +211,13 @@ def read_portfolio_details(
     
     type_totals: Dict[str, float] = {"stock": 0.0, "crypto": 0.0}
     ticker_totals: Dict[str, float] = {}
-
-    # Fetch live prices for all held tickers in one batch (cached for 5 min)
-    active_tickers = [tk for tk, h in holdings_dict.items() if h["qty"] > 0.0]
-    fallback_prices = {
-        tk: (h["avg_cost"] if h["avg_cost"] > 0 else 100.0)
-        for tk, h in holdings_dict.items()
-    }
-    live_prices = get_live_prices_batch(active_tickers, fallback_prices)
     
     for tk, h in holdings_dict.items():
         if h["qty"] <= 0.0:
             continue
             
-        # Live price (cached, real market data where available; falls back to avg cost)
-        current_price = live_prices.get(tk, h["avg_cost"] if h["avg_cost"] > 0 else 100.0)
+        # Get live pricing feed or fallback
+        current_price = MOCK_PRICES.get(tk, h["avg_cost"] if h["avg_cost"] > 0 else 100.0)
         
         current_val = h["qty"] * current_price
         cost_basis = h["qty"] * h["avg_cost"]
