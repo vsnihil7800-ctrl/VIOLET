@@ -265,6 +265,24 @@ def create_streak_log(
     db.refresh(db_streak)
     return db_streak
 
+@router.delete("/streaks/{id}", status_code=status.HTTP_200_OK)
+def delete_streak_log(
+    id: str,
+    current_user: User = Depends(deps.get_current_user),
+    db: Session = Depends(get_db)
+) -> Any:
+    """Delete a coding streak log entry."""
+    db_streak = db.query(CodingStreak).filter(
+        CodingStreak.id == id, CodingStreak.user_id == current_user.id
+    ).first()
+
+    if not db_streak:
+        raise HTTPException(status_code=404, detail="Coding streak log not found")
+
+    db.delete(db_streak)
+    db.commit()
+    return {"detail": "Coding streak log successfully deleted"}
+
 
 # ----------------- Workspace Summary Endpoint -----------------
 
