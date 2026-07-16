@@ -18,22 +18,9 @@ from app.schemas.investment import (
     InvestmentPortfolio
 )
 
-router = APIRouter()
+from app.services.price_feed import get_live_prices_batch
 
-# Mock live pricing feed for development & AI analytics
-MOCK_PRICES: Dict[str, float] = {
-    "AAPL": 224.50,
-    "MSFT": 435.20,
-    "TSLA": 254.80,
-    "NVDA": 128.30,
-    "AMZN": 184.60,
-    "GOOGL": 178.90,
-    "BTC": 64250.00,
-    "ETH": 3420.50,
-    "SOL": 142.80,
-    "ADA": 0.38,
-    "DOT": 6.20,
-}
+router = APIRouter()
 
 # ----------------- Transactions Endpoints -----------------
 
@@ -212,12 +199,16 @@ def read_portfolio_details(
     type_totals: Dict[str, float] = {"stock": 0.0, "crypto": 0.0}
     ticker_totals: Dict[str, float] = {}
     
+    # Fetch live prices (INR) for all held tickers in one batch call
+    held_tickers = [tk for tk, h in holdings_dict.items() if h["qty"] > 0.0]
+    live_prices = get_live_prices_batch(held_tickers)
+
     for tk, h in holdings_dict.items():
         if h["qty"] <= 0.0:
             continue
-            
-        # Get live pricing feed or fallback
-        current_price = MOCK_PRICES.get(tk, h["avg_cost"] if h["avg_cost"] > 0 else 100.0)
+
+        # Get live pricing feed (INR) or fallback to average buy cost
+        current_price = live_prices.get(tk, h["avg_cost"] if h["avg_cost"] > 0 else 100.0)
         
         current_val = h["qty"] * current_price
         cost_basis = h["qty"] * h["avg_cost"]

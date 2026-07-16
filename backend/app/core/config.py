@@ -16,14 +16,13 @@ class Settings(BaseSettings):
             return v.replace("postgres://", "postgresql://", 1)
         return v
     
+    FINNHUB_API_KEY: str = ""
+
     JWT_SECRET_KEY: str = "violet-local-development-secret-key-32-bytes-long-for-jwt-signing"
     JWT_REFRESH_SECRET_KEY: str = "violet-local-development-refresh-secret-key-32-bytes-long-for-jwt-signing"
     
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
-
-    # Live pricing feed for stocks (free tier: https://finnhub.io/register)
-    FINNHUB_API_KEY: str = ""
     
     # CORS Origins. Can be a JSON-formatted list of strings.
     CORS_ORIGINS: Union[List[str], str] = ["http://localhost:5173", "http://localhost:3000", "http://localhost:8000"]
