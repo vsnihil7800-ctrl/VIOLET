@@ -12,10 +12,12 @@ import {
   Camera,
   Activity,
   FileImage,
-  Weight
+  Weight,
+  Target
 } from "lucide-react";
 import { WorkoutModal } from "../components/Fitness/WorkoutModal";
 import { MealModal } from "../components/Fitness/MealModal";
+import { GoalsModal } from "../components/Fitness/GoalsModal";
 import type { MealPrefill } from "../components/Fitness/MealModal";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
@@ -28,6 +30,7 @@ export const Fitness: React.FC = () => {
   // Modals state
   const [isWorkoutOpen, setIsWorkoutOpen] = useState(false);
   const [isMealOpen, setIsMealOpen] = useState(false);
+  const [isGoalsOpen, setIsGoalsOpen] = useState(false);
   const [prefillMeal, setPrefillMeal] = useState<MealPrefill | null>(null);
 
   // Calorie & Weight inputs state
@@ -283,6 +286,12 @@ export const Fitness: React.FC = () => {
         </div>
         <div className="flex gap-2">
           <button
+            onClick={() => setIsGoalsOpen(true)}
+            className="py-2 px-3.5 bg-secondary hover:bg-secondary/85 border border-border text-foreground font-semibold rounded-xl text-xs flex items-center gap-1.5 transition-colors"
+          >
+            <Target size={14} /> Edit Goals
+          </button>
+          <button
             onClick={() => {
               setPrefillMeal(null);
               setIsMealOpen(true);
@@ -470,9 +479,9 @@ export const Fitness: React.FC = () => {
           <div className="border-t border-border/80 pt-4 space-y-3.5">
             <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Today's Macronutrients</h4>
             <div className="space-y-3.5">
-              {renderMacroProgress("Protein Target", summary?.macro_totals?.protein ?? 0, 130, "bg-emerald-500")}
-              {renderMacroProgress("Carbs Target", summary?.macro_totals?.carbs ?? 0, 250, "bg-primary")}
-              {renderMacroProgress("Fat Target", summary?.macro_totals?.fat ?? 0, 70, "bg-rose-400")}
+              {renderMacroProgress("Protein Target", summary?.macro_totals?.protein ?? 0, summary?.target_protein_g ?? 130, "bg-emerald-500")}
+              {renderMacroProgress("Carbs Target", summary?.macro_totals?.carbs ?? 0, summary?.target_carbs_g ?? 250, "bg-primary")}
+              {renderMacroProgress("Fat Target", summary?.macro_totals?.fat ?? 0, summary?.target_fat_g ?? 70, "bg-rose-400")}
             </div>
           </div>
 
@@ -646,6 +655,21 @@ export const Fitness: React.FC = () => {
         queryClient.invalidateQueries({ queryKey: ["fitnessWorkouts"] });
         queryClient.invalidateQueries({ queryKey: ["fitnessSummary"] });
       }} />
+
+      {/* Goals editing dialog */}
+      <GoalsModal
+        isOpen={isGoalsOpen}
+        onClose={() => setIsGoalsOpen(false)}
+        currentGoals={summary ? {
+          target_calories: summary.target_calories,
+          target_protein_g: summary.target_protein_g,
+          target_carbs_g: summary.target_carbs_g,
+          target_fat_g: summary.target_fat_g,
+        } : null}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["fitnessSummary"] });
+        }}
+      />
 
       {/* Meal logging dialog */}
       <MealModal

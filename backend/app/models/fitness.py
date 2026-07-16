@@ -54,3 +54,22 @@ class MealLog(Base):
 
     # Relationship
     user = relationship("User", backref="meals")
+
+
+class FitnessGoal(Base):
+    __tablename__ = "fitness_goals"
+
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True)
+    target_calories = Column(Float, default=2200.0, nullable=False)
+    target_protein_g = Column(Float, default=130.0, nullable=False)
+    target_carbs_g = Column(Float, default=250.0, nullable=False)
+    target_fat_g = Column(Float, default=70.0, nullable=False)
+    updated_at = Column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc)
+    )
+
+    # Relationship
+    user = relationship("User", backref="fitness_goal")
