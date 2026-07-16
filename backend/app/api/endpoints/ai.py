@@ -233,7 +233,7 @@ def summarize_portfolio_advisory(
     crypto_pct = (crypto_val / total_val) * 100
     
     advice_bullets = []
-    advice_bullets.append(f"### Portfolio Analysis Summary\nYour portfolio holds **${total_val:,.2f}** in total asset valuation, yielding a total P&L return of **{'+' if total_pl >= 0 else ''}${total_pl:,.2f} ({pl_pct}%)**.")
+    advice_bullets.append(f"### Portfolio Analysis Summary\nYour portfolio holds **₹{total_val:,.2f}** in total asset valuation, yielding a total P&L return of **{'+' if total_pl >= 0 else ''}₹{total_pl:,.2f} ({pl_pct}%)**.")
     
     # Target stock vs crypto split: 75 / 25
     score = 100
