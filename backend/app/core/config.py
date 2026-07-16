@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
+    # Live pricing feed for stocks (free tier: https://finnhub.io/register)
+    FINNHUB_API_KEY: str = ""
     
     # CORS Origins. Can be a JSON-formatted list of strings.
     CORS_ORIGINS: Union[List[str], str] = ["http://localhost:5173", "http://localhost:3000", "http://localhost:8000"]
