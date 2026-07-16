@@ -13,11 +13,10 @@ import {
   Activity,
   FileImage,
   Weight,
-  Target
+  BarChart3
 } from "lucide-react";
 import { WorkoutModal } from "../components/Fitness/WorkoutModal";
 import { MealModal } from "../components/Fitness/MealModal";
-import { GoalsModal } from "../components/Fitness/GoalsModal";
 import type { MealPrefill } from "../components/Fitness/MealModal";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
@@ -30,7 +29,6 @@ export const Fitness: React.FC = () => {
   // Modals state
   const [isWorkoutOpen, setIsWorkoutOpen] = useState(false);
   const [isMealOpen, setIsMealOpen] = useState(false);
-  const [isGoalsOpen, setIsGoalsOpen] = useState(false);
   const [prefillMeal, setPrefillMeal] = useState<MealPrefill | null>(null);
 
   // Calorie & Weight inputs state
@@ -41,6 +39,9 @@ export const Fitness: React.FC = () => {
   const [scannedData, setScannedData] = useState<MealPrefill | null>(null);
   const [scanPreview, setScanPreview] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
+
+  // Past-day calories bar chart toggle
+  const [showCalorieHistory, setShowCalorieHistory] = useState(false);
 
   // ----------------- API QUERIES -----------------
 
@@ -78,6 +79,16 @@ export const Fitness: React.FC = () => {
       const res = await api.get("/fitness/weights");
       return res.data;
     },
+  });
+
+  // 5. Fetch past-days calorie history (only once the bar chart is opened)
+  const { data: calorieHistory, isLoading: isCalorieHistoryLoading } = useQuery({
+    queryKey: ["fitnessCalorieHistory"],
+    queryFn: async () => {
+      const res = await api.get("/fitness/meals/calories-history", { params: { days: 7 } });
+      return res.data;
+    },
+    enabled: showCalorieHistory,
   });
 
   // ----------------- MUTATIONS -----------------
@@ -255,6 +266,88 @@ export const Fitness: React.FC = () => {
     );
   };
 
+  // ----------------- SVG CALORIES BAR CHART BUILDER -----------------
+  const renderCaloriesBarChart = () => {
+    if (isCalorieHistoryLoading) {
+      return (
+        <div className="flex items-center justify-center h-48">
+          <Loader2 className="animate-spin text-muted-foreground" size={24} />
+        </div>
+      );
+    }
+
+    if (!calorieHistory || calorieHistory.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center h-48 text-muted-foreground text-xs bg-secondary/15 rounded-xl border border-dashed border-border p-4">
+          <BarChart3 size={32} className="opacity-30 mb-2" />
+          No past calorie data to chart yet.
+        </div>
+      );
+    }
+
+    const paddingX = 30;
+    const paddingY = 20;
+    const width = 500;
+    const height = 200;
+    const chartW = width - 2 * paddingX;
+    const chartH = height - 2 * paddingY;
+
+    const values = calorieHistory.map((d: any) => d.calories);
+    const maxCal = Math.max(...values, 1) * 1.15; // headroom above tallest bar
+
+    const barSlot = chartW / calorieHistory.length;
+    const barWidth = Math.min(barSlot * 0.55, 44);
+
+    const todayStr = new Date().toISOString().slice(0, 10);
+
+    return (
+      <div className="w-full">
+        <svg viewBox={`0 0 ${width} ${height}`} className="w-full overflow-visible">
+          {/* Baseline */}
+          <line x1={paddingX} y1={height - paddingY} x2={width - paddingX} y2={height - paddingY} className="stroke-border/60 stroke-1" />
+
+          {calorieHistory.map((d: any, idx: number) => {
+            const barH = (d.calories / maxCal) * chartH;
+            const x = paddingX + idx * barSlot + (barSlot - barWidth) / 2;
+            const y = height - paddingY - barH;
+            const isToday = d.date === todayStr;
+
+            return (
+              <g key={d.date} className="group/bar cursor-pointer">
+                <rect
+                  x={x}
+                  y={y}
+                  width={barWidth}
+                  height={Math.max(barH, 1)}
+                  rx="4"
+                  className={`${isToday ? "fill-primary" : "fill-primary/40"} group-hover/bar:fill-accent transition-colors`}
+                />
+
+                {/* Value tooltip on hover */}
+                <g className="opacity-0 group-hover/bar:opacity-100 transition-opacity duration-150 pointer-events-none">
+                  <rect x={x + barWidth / 2 - 24} y={y - 22} width="48" height="16" rx="4" className="fill-foreground" />
+                  <text x={x + barWidth / 2} y={y - 10} className="fill-background text-[9px] font-extrabold" textAnchor="middle">
+                    {d.calories.toFixed(0)} kcal
+                  </text>
+                </g>
+
+                {/* Date label */}
+                <text
+                  x={x + barWidth / 2}
+                  y={height - paddingY + 12}
+                  className="fill-muted-foreground text-[8px] font-semibold"
+                  textAnchor="middle"
+                >
+                  {new Date(d.date + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                </text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+    );
+  };
+
   // Macros progress mapping helper
   const renderMacroProgress = (label: string, value: number, target: number, color: string) => {
     const percent = Math.min((value / target) * 100, 100);
@@ -285,12 +378,6 @@ export const Fitness: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          <button
-            onClick={() => setIsGoalsOpen(true)}
-            className="py-2 px-3.5 bg-secondary hover:bg-secondary/85 border border-border text-foreground font-semibold rounded-xl text-xs flex items-center gap-1.5 transition-colors"
-          >
-            <Target size={14} /> Edit Goals
-          </button>
           <button
             onClick={() => {
               setPrefillMeal(null);
@@ -479,9 +566,9 @@ export const Fitness: React.FC = () => {
           <div className="border-t border-border/80 pt-4 space-y-3.5">
             <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Today's Macronutrients</h4>
             <div className="space-y-3.5">
-              {renderMacroProgress("Protein Target", summary?.macro_totals?.protein ?? 0, summary?.target_protein_g ?? 130, "bg-emerald-500")}
-              {renderMacroProgress("Carbs Target", summary?.macro_totals?.carbs ?? 0, summary?.target_carbs_g ?? 250, "bg-primary")}
-              {renderMacroProgress("Fat Target", summary?.macro_totals?.fat ?? 0, summary?.target_fat_g ?? 70, "bg-rose-400")}
+              {renderMacroProgress("Protein Target", summary?.macro_totals?.protein ?? 0, 130, "bg-emerald-500")}
+              {renderMacroProgress("Carbs Target", summary?.macro_totals?.carbs ?? 0, 250, "bg-primary")}
+              {renderMacroProgress("Fat Target", summary?.macro_totals?.fat ?? 0, 70, "bg-rose-400")}
             </div>
           </div>
 
@@ -515,6 +602,26 @@ export const Fitness: React.FC = () => {
           {/* TAB 1: CALORIE MEALS */}
           {activeTab === "meals" && (
             <div className="space-y-4">
+              {/* Past-day calories bar chart toggle */}
+              <div className="flex items-center justify-between">
+                <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                  {showCalorieHistory ? "Past 7 Days" : "Today"}
+                </h4>
+                <button
+                  onClick={() => setShowCalorieHistory((prev) => !prev)}
+                  className="py-1.5 px-3 bg-secondary hover:bg-secondary/85 border border-border text-foreground font-semibold rounded-lg text-[10px] flex items-center gap-1.5 transition-colors"
+                >
+                  <BarChart3 size={13} />
+                  {showCalorieHistory ? "Hide Past Days" : "Past Day Calories"}
+                </button>
+              </div>
+
+              {showCalorieHistory && (
+                <div className="p-4 bg-secondary/15 border border-border/40 rounded-xl">
+                  {renderCaloriesBarChart()}
+                </div>
+              )}
+
               {isMealsLoading ? (
                 <div className="flex items-center justify-center py-16">
                   <Loader2 className="animate-spin text-muted-foreground" size={24} />
@@ -655,21 +762,6 @@ export const Fitness: React.FC = () => {
         queryClient.invalidateQueries({ queryKey: ["fitnessWorkouts"] });
         queryClient.invalidateQueries({ queryKey: ["fitnessSummary"] });
       }} />
-
-      {/* Goals editing dialog */}
-      <GoalsModal
-        isOpen={isGoalsOpen}
-        onClose={() => setIsGoalsOpen(false)}
-        currentGoals={summary ? {
-          target_calories: summary.target_calories,
-          target_protein_g: summary.target_protein_g,
-          target_carbs_g: summary.target_carbs_g,
-          target_fat_g: summary.target_fat_g,
-        } : null}
-        onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ["fitnessSummary"] });
-        }}
-      />
 
       {/* Meal logging dialog */}
       <MealModal

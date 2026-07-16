@@ -10,7 +10,7 @@ from sqlalchemy import func
 from app.api import deps
 from app.core.database import get_db
 from app.models.user import User
-from app.models.fitness import WorkoutLog, WeightLog, MealLog, FitnessGoal
+from app.models.fitness import WorkoutLog, WeightLog, MealLog
 from app.schemas.fitness import (
     WorkoutLogCreate,
     WorkoutLogResponse,
@@ -20,8 +20,7 @@ from app.schemas.fitness import (
     MealLogResponse,
     MacroTotals,
     FitnessSummary,
-    FitnessGoalUpdate,
-    FitnessGoalResponse
+    DailyCalories
 )
 
 router = APIRouter()
@@ -74,45 +73,6 @@ def calculate_gym_streak(db: Session, user_id: str) -> int:
             break
             
     return streak
-
-
-# ----------------- Goals Helper -----------------
-def get_or_create_goal(db: Session, user_id: str) -> FitnessGoal:
-    """Fetch the user's fitness goal row, creating a default one on first access."""
-    goal = db.query(FitnessGoal).filter(FitnessGoal.user_id == user_id).first()
-    if not goal:
-        goal = FitnessGoal(user_id=user_id)
-        db.add(goal)
-        db.commit()
-        db.refresh(goal)
-    return goal
-
-
-# ----------------- Goals Endpoints -----------------
-
-@router.get("/goals", response_model=FitnessGoalResponse)
-def read_goals(
-    current_user: User = Depends(deps.get_current_user),
-    db: Session = Depends(get_db)
-) -> Any:
-    """Get the user's current calorie/macro goals (creates defaults if none set yet)."""
-    return get_or_create_goal(db, current_user.id)
-
-@router.put("/goals", response_model=FitnessGoalResponse)
-def update_goals(
-    goal_in: FitnessGoalUpdate,
-    current_user: User = Depends(deps.get_current_user),
-    db: Session = Depends(get_db)
-) -> Any:
-    """Update the user's daily calorie/protein/carb/fat goals."""
-    goal = get_or_create_goal(db, current_user.id)
-    goal.target_calories = goal_in.target_calories
-    goal.target_protein_g = goal_in.target_protein_g
-    goal.target_carbs_g = goal_in.target_carbs_g
-    goal.target_fat_g = goal_in.target_fat_g
-    db.commit()
-    db.refresh(goal)
-    return goal
 
 
 # ----------------- Workout Logs Endpoints -----------------
@@ -215,6 +175,40 @@ def read_meals(
         query = query.filter(func.date(MealLog.date) == today)
         
     return query.order_by(MealLog.created_at.desc()).all()
+
+@router.get("/meals/calories-history", response_model=List[DailyCalories])
+def read_calories_history(
+    days: int = 7,
+    current_user: User = Depends(deps.get_current_user),
+    db: Session = Depends(get_db)
+) -> Any:
+    """Get total calories consumed per day for the last N days (for bar chart), oldest first."""
+    days = max(1, min(days, 90))  # keep the range sane
+    today = datetime.now(timezone.utc).date()
+    start_date = today - timedelta(days=days - 1)
+
+    rows = db.query(
+        func.date(MealLog.date).label("day"),
+        func.sum(MealLog.calories).label("total")
+    ).filter(
+        MealLog.user_id == current_user.id,
+        func.date(MealLog.date) >= start_date.isoformat()
+    ).group_by(func.date(MealLog.date)).all()
+
+    totals_by_day = {}
+    for row in rows:
+        day_str = row.day if isinstance(row.day, str) else row.day.isoformat()
+        totals_by_day[day_str] = float(row.total or 0)
+
+    # Fill in every day in the range, even ones with no logged meals
+    history = []
+    for i in range(days):
+        d = start_date + timedelta(days=i)
+        d_str = d.isoformat()
+        history.append(DailyCalories(date=d_str, calories=totals_by_day.get(d_str, 0.0)))
+
+    return history
+
 
 @router.post("/meals", response_model=MealLogResponse, status_code=status.HTTP_201_CREATED)
 def create_meal(
@@ -328,17 +322,11 @@ def read_fitness_summary(
         WorkoutLog.user_id == current_user.id
     ).order_by(WorkoutLog.date.desc()).limit(5).all()
     
-    # 6. User's calorie/macro goals (creates defaults on first access)
-    goal = get_or_create_goal(db, current_user.id)
-    
     return FitnessSummary(
         gym_streak=streak,
         today_calories_eaten=today_calories_eaten,
         today_calories_burned=today_calories_burned,
-        target_calories=goal.target_calories,
-        target_protein_g=goal.target_protein_g,
-        target_carbs_g=goal.target_carbs_g,
-        target_fat_g=goal.target_fat_g,
+        target_calories=2200.0,
         macro_totals=MacroTotals(protein=protein, carbs=carbs, fat=fat),
         weight_history=weights,
         recent_workouts=recent

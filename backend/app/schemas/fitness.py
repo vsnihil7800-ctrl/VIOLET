@@ -55,21 +55,6 @@ class MealLogResponse(MealLogCreate):
         from_attributes = True
 
 
-# ----------------- Goals -----------------
-class FitnessGoalUpdate(BaseModel):
-    target_calories: float = Field(..., gt=0)
-    target_protein_g: float = Field(..., ge=0)
-    target_carbs_g: float = Field(..., ge=0)
-    target_fat_g: float = Field(..., ge=0)
-
-class FitnessGoalResponse(FitnessGoalUpdate):
-    id: str
-    user_id: str
-
-    class Config:
-        from_attributes = True
-
-
 # ----------------- Summaries & Analytics -----------------
 class MacroTotals(BaseModel):
     protein: float
@@ -81,9 +66,11 @@ class FitnessSummary(BaseModel):
     today_calories_eaten: float
     today_calories_burned: float
     target_calories: float = 2200.0  # standard target calorie limit
-    target_protein_g: float = 130.0
-    target_carbs_g: float = 250.0
-    target_fat_g: float = 70.0
     macro_totals: MacroTotals
     weight_history: List[WeightLogResponse]
     recent_workouts: List[WorkoutLogResponse]
+
+
+class DailyCalories(BaseModel):
+    date: str  # "YYYY-MM-DD"
+    calories: float
