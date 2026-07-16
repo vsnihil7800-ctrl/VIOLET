@@ -24,13 +24,15 @@ def get_current_user(
         token_data = TokenPayload(**payload)
         if token_data.type != "access":
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
+                status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Could not validate credentials: invalid token type",
+                headers={"WWW-Authenticate": "Bearer"},
             )
     except JWTError:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials: token expired or invalid",
+            headers={"WWW-Authenticate": "Bearer"},
         )
     user = db.query(User).filter(User.id == token_data.sub).first()
     if not user:
