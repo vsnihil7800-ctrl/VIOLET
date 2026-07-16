@@ -187,7 +187,7 @@ export const Dashboard: React.FC = () => {
                 <g className="opacity-0 group-hover/bar:opacity-100 transition-opacity duration-200 pointer-events-none">
                   <rect x={groupX - 50} y={paddingY - 15} width="100" height="24" rx="4" className="fill-foreground shadow-md" />
                   <text x={groupX} y={paddingY - 4} className="fill-background text-[7px] font-bold" textAnchor="middle">
-                    Inc: ${data.income.toFixed(0)} | Exp: ${data.expenses.toFixed(0)}
+                    Inc: ₹{data.income.toFixed(0)} | Exp: ₹{data.expenses.toFixed(0)}
                   </text>
                 </g>
               </g>
@@ -224,7 +224,7 @@ export const Dashboard: React.FC = () => {
           <div>
             <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Aggregated Net Worth</p>
             <p className="text-xl font-black mt-1 text-foreground">
-              ${netWorth.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ₹{netWorth.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
           <div className="p-3 bg-primary/10 text-primary rounded-xl group-hover:scale-105 transition-transform">
@@ -357,7 +357,7 @@ export const Dashboard: React.FC = () => {
               <div>
                 <p className="text-xs text-muted-foreground">Total Holdings Value</p>
                 <div className="flex items-baseline gap-2 mt-0.5">
-                  <span className="text-2xl font-extrabold">${(portfolio?.total_value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span className="text-2xl font-extrabold">₹{(portfolio?.total_value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   {portfolio?.total_pl !== undefined && portfolio?.total_pl !== 0 && (
                     <span className={`text-xs font-semibold px-1.5 py-0.5 rounded flex items-center gap-0.5
                       ${portfolio.total_pl >= 0 ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500"}`}>
@@ -381,7 +381,7 @@ export const Dashboard: React.FC = () => {
                         <span className="text-muted-foreground text-[10px] capitalize truncate max-w-[80px]">{h.name}</span>
                       </div>
                       <span className="font-semibold">
-                        ${h.total_value.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        ₹{h.total_value.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         <span className={`font-bold ml-1.5 ${h.total_pl >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
                           {h.total_pl >= 0 ? "+" : ""}{h.pl_percentage}%
                         </span>

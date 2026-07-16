@@ -188,7 +188,7 @@ export const Investments: React.FC = () => {
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
             <span className="text-[10px] uppercase font-semibold text-muted-foreground">Portfolio</span>
-            <span className="text-sm font-extrabold">${portfolio.total_value.toFixed(0)}</span>
+            <span className="text-sm font-extrabold">₹{portfolio.total_value.toFixed(0)}</span>
           </div>
         </div>
 
@@ -198,7 +198,7 @@ export const Investments: React.FC = () => {
             <div key={idx} className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: slice.color }} />
               <span className="capitalize font-medium text-foreground">{slice.name}s</span>
-              <span className="text-muted-foreground ml-1">(${slice.value.toLocaleString()})</span>
+              <span className="text-muted-foreground ml-1">(₹{slice.value.toLocaleString()})</span>
               <span className="font-bold ml-auto">{slice.percent}%</span>
             </div>
           ))}
@@ -252,7 +252,7 @@ export const Investments: React.FC = () => {
           <div>
             <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Portfolio Net Value</p>
             <p className="text-xl font-extrabold mt-1">
-              {isPortfolioLoading ? "..." : `$${(portfolio?.total_value ?? 0).toLocaleString()}`}
+              {isPortfolioLoading ? "..." : `₹${(portfolio?.total_value ?? 0).toLocaleString()}`}
             </p>
           </div>
           <div className="p-3 bg-primary/10 text-primary rounded-xl">
@@ -285,7 +285,7 @@ export const Investments: React.FC = () => {
           <div>
             <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Stocks Value</p>
             <p className="text-xl font-extrabold mt-1 text-foreground">
-              {isPortfolioLoading ? "..." : `$${(portfolio?.allocation?.find((a: any) => a.name === "stock")?.value ?? 0).toLocaleString()}`}
+              {isPortfolioLoading ? "..." : `₹${(portfolio?.allocation?.find((a: any) => a.name === "stock")?.value ?? 0).toLocaleString()}`}
             </p>
           </div>
           <div className="p-3 bg-secondary rounded-xl text-muted-foreground">
@@ -298,7 +298,7 @@ export const Investments: React.FC = () => {
           <div>
             <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Cryptocurrency Value</p>
             <p className="text-xl font-extrabold mt-1 text-foreground">
-              {isPortfolioLoading ? "..." : `$${(portfolio?.allocation?.find((a: any) => a.name === "crypto")?.value ?? 0).toLocaleString()}`}
+              {isPortfolioLoading ? "..." : `₹${(portfolio?.allocation?.find((a: any) => a.name === "crypto")?.value ?? 0).toLocaleString()}`}
             </p>
           </div>
           <div className="p-3 bg-secondary rounded-xl text-muted-foreground">
@@ -352,7 +352,7 @@ export const Investments: React.FC = () => {
                     <div className="flex justify-between text-xs">
                       <span className="font-bold text-foreground">{tick.ticker}</span>
                       <span className="text-muted-foreground">
-                        ${tick.value.toLocaleString()} ({tick.percentage}%)
+                        ₹{tick.value.toLocaleString()} ({tick.percentage}%)
                       </span>
                     </div>
                     <div className="w-full bg-secondary h-2.5 rounded-full overflow-hidden">
@@ -425,11 +425,11 @@ export const Investments: React.FC = () => {
                           <td className="py-2.5 font-extrabold tracking-wide text-foreground">{h.ticker}</td>
                           <td className="py-2.5 text-muted-foreground capitalize">{h.name}</td>
                           <td className="py-2.5 font-semibold">{h.quantity}</td>
-                          <td className="py-2.5 text-muted-foreground">${h.average_cost.toLocaleString()}</td>
-                          <td className="py-2.5 text-muted-foreground">${h.current_price.toLocaleString()}</td>
-                          <td className="py-2.5 font-bold">${h.total_value.toLocaleString()}</td>
+                          <td className="py-2.5 text-muted-foreground">₹{h.average_cost.toLocaleString()}</td>
+                          <td className="py-2.5 text-muted-foreground">₹{h.current_price.toLocaleString()}</td>
+                          <td className="py-2.5 font-bold">₹{h.total_value.toLocaleString()}</td>
                           <td className={`py-2.5 text-right font-extrabold ${getPLColorClass(h.total_pl)}`}>
-                            {h.total_pl >= 0 ? "+" : ""}${h.total_pl.toLocaleString()}{" "}
+                            {h.total_pl >= 0 ? "+" : ""}₹{h.total_pl.toLocaleString()}{" "}
                             <span className="text-[10px] font-semibold">({h.pl_percentage}%)</span>
                           </td>
                         </tr>
@@ -523,8 +523,8 @@ export const Investments: React.FC = () => {
                             {new Date(tx.date).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                           </td>
                           <td className="py-2.5 font-medium">{tx.quantity}</td>
-                          <td className="py-2.5 text-muted-foreground">${tx.price.toLocaleString()}</td>
-                          <td className="py-2.5 font-bold">${(tx.quantity * tx.price).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                          <td className="py-2.5 text-muted-foreground">₹{tx.price.toLocaleString()}</td>
+                          <td className="py-2.5 font-bold">₹{(tx.quantity * tx.price).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                           <td className="py-2.5 text-right">
                             <button
                               onClick={() => handleDeleteTrade(tx.id)}
