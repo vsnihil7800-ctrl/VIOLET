@@ -238,7 +238,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             {/* Amount */}
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-                Amount ($)
+                Amount (₹)
               </label>
               <input
                 type="number"

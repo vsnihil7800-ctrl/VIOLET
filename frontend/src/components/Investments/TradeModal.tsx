@@ -225,7 +225,7 @@ export const TradeModal: React.FC<TradeModalProps> = ({
             {/* Price */}
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-                Price ($ / Unit)
+                Price (₹ / Unit)
               </label>
               <input
                 type="number"

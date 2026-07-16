@@ -108,7 +108,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, onSuc
 
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-              Monthly Limit Amount ($)
+              Monthly Limit Amount (₹)
             </label>
             <input
               type="number"

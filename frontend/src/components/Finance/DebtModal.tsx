@@ -139,7 +139,7 @@ export const DebtModal: React.FC<DebtModalProps> = ({ isOpen, onClose, onSuccess
             {/* Amount */}
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-                Amount ($)
+                Amount (₹)
               </label>
               <input
                 type="number"
