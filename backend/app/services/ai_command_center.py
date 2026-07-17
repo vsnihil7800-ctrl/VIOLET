@@ -2,7 +2,7 @@ import re
 from datetime import datetime, timezone, timedelta
 from sqlalchemy.orm import Session
 
-from app.models.finance import Transaction, Debt
+from app.models.finance import Transaction, Debt, Budget
 from app.models.productivity import Note, TodoItem, CodingStreak
 from app.models.schedule import CalendarEvent, Reminder, Document
 from app.models.fitness import WorkoutLog, WeightLog, MealLog
@@ -53,7 +53,7 @@ class AICommandCenterService:
             return (
                 f"### 💸 Transaction Logged\n"
                 f"I've added an expense to your **Finance** ledger:\n"
-                f"- **Amount**: ${amount:.2f}\n"
+                f"- **Amount**: ₹{amount:.2f}\n"
                 f"- **Category**: {cat}\n"
                 f"- **Merchant/Details**: \"{desc.capitalize()}\"\n\n"
                 f"Your budgets and net savings stats have been recalculated."
@@ -150,7 +150,7 @@ class AICommandCenterService:
                 f"### 🤝 IOU Registered\n"
                 f"I've updated your debt tracking ledger:\n"
                 f"- **Contact**: {person}\n"
-                f"- **Amount**: ${amount:.2f} (Owed to Me)\n\n"
+                f"- **Amount**: ₹{amount:.2f} (Owed to Me)\n\n"
                 f"You can verify settlements inside the **Finance** panel."
             )
 
@@ -198,9 +198,9 @@ class AICommandCenterService:
             return (
                 f"### 📊 Finance RAG Report\n"
                 f"Retrieved logs from your database:\n\n"
-                f"- **Transactions (last 5)**: Incomes sum to **${income_sum:,.2f}** vs Expenses sum to **${expense_sum:,.2f}**.\n"
+                f"- **Transactions (last 5)**: Incomes sum to **₹{income_sum:,.2f}** vs Expenses sum to **₹{expense_sum:,.2f}**.\n"
                 f"- **Budgets**: You have **{len(budgets)}** active budget lines.\n"
-                f"- **IOUs**: Contacts owe you **${owed_to_me:,.2f}**; you owe contacts **${owed_by_me:,.2f}**."
+                f"- **IOUs**: Contacts owe you **₹{owed_to_me:,.2f}**; you owe contacts **₹{owed_by_me:,.2f}**."
             )
             
         # ----------------- FITNESS LISTING QUERY -----------------
@@ -233,7 +233,7 @@ class AICommandCenterService:
             f"- **Planner Agendas**: **{events_count}** events blocked on grid\n"
             f"- **Vault Documents**: **{docs_count}** files secured\n\n"
             f"You can command me to log items in plain text, e.g.:\n"
-            f"- *\"Add $15 spent on dinner\"*\n"
+            f"- *\"Add ₹15 spent on dinner\"*\n"
             f"- *\"Create a note about my task list\"*\n"
             f"- *\"Remind me to call client tomorrow\"*"
         )
