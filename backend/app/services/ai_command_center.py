@@ -9,13 +9,15 @@ from app.models.fitness import WorkoutLog, WeightLog, MealLog
 from app.models.investment import InvestmentTransaction
 
 _FILLER_WORDS = [
-    "hey", "hi", "please", "pls", "can you", "could you", "would you",
-    "i want to", "i want you to", "i need to", "i need you to",
-    "just", "kindly", "go ahead and", "note down that", "note that",
-    "around", "about", "approximately", "roughly", "today", "so",
+    "hey", "hi", "yo", "hello", "please", "pls", "can you", "could you", "would you", "can u",
+    "i want to", "i want you to", "i need to", "i need you to", "i think", "i guess",
+    "just", "kindly", "go ahead and", "note down that", "note that", "let's just say",
+    "around", "about", "approximately", "roughly", "today", "so", "basically", "actually",
+    "umm", "uh", "like", "btw", "fyi", "by the way", "for me", "for the record",
+    "gotta", "got to",
 ]
 
-_CURRENCY_WORDS = ["rupees", "rs.", "rs", "inr"]
+_CURRENCY_WORDS = ["rupees", "rupee", "rs.", "rs", "inr", "bucks", "buck"]
 
 
 def _strip_fillers(text: str) -> str:
@@ -36,13 +38,13 @@ class AICommandCenterService:
         q_lower = _strip_fillers(q.lower())
 
         match = re.search(
-            r'(?:add|log|spent|spend|had|have|paid|pay|bought|buy|got)\s*[$₹£]?\s*(\d+(?:\.\d+)?)\s*(?:spent\s*)?(?:on|for)\s+(.+)',
+            r'(?:add|log|spent|spend|had|have|paid|pay|bought|buy|got|cost\s+me|charged\s+me|used|shelled\s+out|blew)\s*[$₹£]?\s*(\d+(?:\.\d+)?)\s*(?:spent\s*)?(?:on|for)\s+(.+)',
             q_lower
         )
         reversed_match = None
         if not match:
             reversed_match = re.search(
-                r'(?:had|have|bought|buy|got)\s+(.+?)\s+for\s*[$₹£]?\s*(\d+(?:\.\d+)?)',
+                r'(?:had|have|bought|buy|got|used|blew)\s+(.+?)\s+for\s*[$₹£]?\s*(\d+(?:\.\d+)?)',
                 q_lower
             )
 
@@ -56,17 +58,17 @@ class AICommandCenterService:
 
             cat = "Others"
             desc_check = desc.lower()
-            if any(k in desc_check for k in ["lunch", "food", "dinner", "breakfast", "burger", "cafe", "coffee", "restaurant", "snack", "groceries", "grocery"]):
+            if any(k in desc_check for k in ["lunch", "food", "dinner", "breakfast", "burger", "cafe", "coffee", "restaurant", "snack", "groceries", "grocery", "tea", "pizza", "swiggy", "zomato", "meal"]):
                 cat = "Food & Dining"
-            elif any(k in desc_check for k in ["bill", "electricity", "water", "internet", "power", "utility", "wifi", "recharge"]):
+            elif any(k in desc_check for k in ["bill", "electricity", "water", "internet", "power", "utility", "wifi", "recharge", "broadband", "mobile bill"]):
                 cat = "Utilities & Bills"
             elif any(k in desc_check for k in ["rent", "mortgage", "house"]):
                 cat = "Rent & Mortgage"
-            elif any(k in desc_check for k in ["uber", "cab", "taxi", "bus", "train", "fuel", "gas", "transit", "auto", "petrol"]):
+            elif any(k in desc_check for k in ["uber", "cab", "taxi", "bus", "train", "fuel", "gas", "transit", "auto", "petrol", "ola", "metro", "parking"]):
                 cat = "Transportation"
-            elif any(k in desc_check for k in ["movie", "game", "netflix", "concert", "show", "spotify", "prime"]):
+            elif any(k in desc_check for k in ["movie", "game", "netflix", "concert", "show", "spotify", "prime", "theatre", "ticket"]):
                 cat = "Entertainment"
-            elif any(k in desc_check for k in ["shop", "clothe", "amazon", "shoes", "shirt", "flipkart"]):
+            elif any(k in desc_check for k in ["shop", "clothe", "amazon", "shoes", "shirt", "flipkart", "myntra", "bought a"]):
                 cat = "Shopping"
 
             tx = Transaction(
@@ -89,11 +91,11 @@ class AICommandCenterService:
             )
 
         match = re.search(
-            r'(?:create|write|add|new|make)\s+a?\s*(?:note|sticky)\s+(?:about|titled|for)?\s*(.+)',
+            r'(?:create|write|add|new|make|save|put\s+down)\s+a?\s*(?:note|sticky)\s+(?:about|titled|for)?\s*(.+)',
             q_lower
         )
         if not match:
-            match = re.search(r'(?:jot\s+down|remember\s+that|remember)\s+(.+)', q_lower)
+            match = re.search(r'(?:jot\s+down|remember\s+that|remember|make\s+a\s+note\s+of)\s+(.+)', q_lower)
         if match:
             content = match.group(1).strip()
             title = content[:30].capitalize() + ("..." if len(content) > 30 else "")
@@ -116,10 +118,10 @@ class AICommandCenterService:
             )
 
         match = re.search(
-            r'(?:add|create|new)\s+a?\s*(?:task|todo|to-do)\s*(?:to|about|:)?\s*(.+)',
+            r'(?:add|create|new|i\s+have\s+to|i\s+need\s+to|must|have\s+to)\s+a?\s*(?:task|todo|to-do)?\s*(?:to|about|:)?\s*(.+)',
             q_lower
         )
-        if match:
+        if match and any(k in q_lower for k in ["task", "todo", "to-do", "need to", "have to", "must", "gotta"]):
             title = match.group(1).strip()
             priority = "medium"
             if any(k in title for k in ["urgent", "important", "asap", "high priority"]):
@@ -144,7 +146,7 @@ class AICommandCenterService:
             )
 
         match = re.search(
-            r'(?:create\s+a?\s*reminder\s+to|remind\s+me\s+to|set\s+a?\s*(?:reminder|alarm)\s+to|alert\s+me\s+to)\s+(.+)',
+            r'(?:create\s+a?\s*reminder\s+to|remind\s+me\s+to|set\s+a?\s*(?:reminder|alarm)\s+to|alert\s+me\s+to|ping\s+me\s+to|notify\s+me\s+to|don\'?t\s+let\s+me\s+forget\s+to)\s+(.+)',
             q_lower
         )
         if match:
