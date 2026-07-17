@@ -13,8 +13,10 @@ from app.models.user import User
 from app.models.schedule import CalendarEvent, Reminder, Document
 from app.schemas.schedule import (
     CalendarEventCreate,
+    CalendarEventUpdate,
     CalendarEventResponse,
     ReminderCreate,
+    ReminderUpdate,
     ReminderResponse,
     DocumentResponse,
     ScheduleSummary
@@ -58,6 +60,36 @@ def create_event(
         color=event_in.color.lower()
     )
     db.add(db_event)
+    db.commit()
+    db.refresh(db_event)
+    return db_event
+
+@router.put("/events/{id}", response_model=CalendarEventResponse)
+def update_event(
+    id: str,
+    event_in: CalendarEventUpdate,
+    current_user: User = Depends(deps.get_current_user),
+    db: Session = Depends(get_db)
+) -> Any:
+    """Edit an existing calendar event."""
+    db_event = db.query(CalendarEvent).filter(
+        CalendarEvent.id == id, CalendarEvent.user_id == current_user.id
+    ).first()
+
+    if not db_event:
+        raise HTTPException(status_code=404, detail="Calendar event not found")
+
+    update_data = event_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        if field == "color" and value is not None:
+            value = value.lower()
+        setattr(db_event, field, value)
+
+    new_start = update_data.get("start_time", db_event.start_time)
+    new_end = update_data.get("end_time", db_event.end_time)
+    if new_end <= new_start:
+        raise HTTPException(status_code=400, detail="End time must be after start time")
+
     db.commit()
     db.refresh(db_event)
     return db_event
@@ -107,6 +139,29 @@ def create_reminder(
         time=reminder_in.time
     )
     db.add(db_reminder)
+    db.commit()
+    db.refresh(db_reminder)
+    return db_reminder
+
+@router.put("/reminders/{id}", response_model=ReminderResponse)
+def update_reminder(
+    id: str,
+    reminder_in: ReminderUpdate,
+    current_user: User = Depends(deps.get_current_user),
+    db: Session = Depends(get_db)
+) -> Any:
+    """Edit an existing reminder."""
+    db_reminder = db.query(Reminder).filter(
+        Reminder.id == id, Reminder.user_id == current_user.id
+    ).first()
+
+    if not db_reminder:
+        raise HTTPException(status_code=404, detail="Reminder not found")
+
+    update_data = reminder_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(db_reminder, field, value)
+
     db.commit()
     db.refresh(db_reminder)
     return db_reminder
@@ -225,12 +280,18 @@ def read_schedule_summary(
         Reminder.is_sent == False
     ).count()
     
-    # Today's events query
-    today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    # Today's events query (computed in IST, since the app's users are India-based;
+    # comparing raw UTC dates caused early-morning IST events to be excluded)
+    IST_OFFSET = timedelta(hours=5, minutes=30)
+    now_ist = datetime.now(timezone.utc) + IST_OFFSET
+    ist_today = now_ist.date()
+    start_of_day_utc = datetime.combine(ist_today, datetime.min.time()) - IST_OFFSET
+    end_of_day_utc = start_of_day_utc + timedelta(days=1)
+
     today_events = db.query(CalendarEvent).filter(
         CalendarEvent.user_id == current_user.id,
-        (func.date(CalendarEvent.start_time) == today_str) |
-        (func.date(CalendarEvent.end_time) == today_str)
+        CalendarEvent.start_time >= start_of_day_utc,
+        CalendarEvent.start_time < end_of_day_utc
     ).order_by(CalendarEvent.start_time.asc()).all()
     
     doc_count = db.query(Document).filter(

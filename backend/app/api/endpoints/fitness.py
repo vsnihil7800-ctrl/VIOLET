@@ -19,8 +19,7 @@ from app.schemas.fitness import (
     MealLogCreate,
     MealLogResponse,
     MacroTotals,
-    FitnessSummary,
-    DailyCalories
+    FitnessSummary
 )
 
 router = APIRouter()
@@ -176,40 +175,6 @@ def read_meals(
         
     return query.order_by(MealLog.created_at.desc()).all()
 
-@router.get("/meals/calories-history", response_model=List[DailyCalories])
-def read_calories_history(
-    days: int = 7,
-    current_user: User = Depends(deps.get_current_user),
-    db: Session = Depends(get_db)
-) -> Any:
-    """Get total calories consumed per day for the last N days (for bar chart), oldest first."""
-    days = max(1, min(days, 90))  # keep the range sane
-    today = datetime.now(timezone.utc).date()
-    start_date = today - timedelta(days=days - 1)
-
-    rows = db.query(
-        func.date(MealLog.date).label("day"),
-        func.sum(MealLog.calories).label("total")
-    ).filter(
-        MealLog.user_id == current_user.id,
-        func.date(MealLog.date) >= start_date.isoformat()
-    ).group_by(func.date(MealLog.date)).all()
-
-    totals_by_day = {}
-    for row in rows:
-        day_str = row.day if isinstance(row.day, str) else row.day.isoformat()
-        totals_by_day[day_str] = float(row.total or 0)
-
-    # Fill in every day in the range, even ones with no logged meals
-    history = []
-    for i in range(days):
-        d = start_date + timedelta(days=i)
-        d_str = d.isoformat()
-        history.append(DailyCalories(date=d_str, calories=totals_by_day.get(d_str, 0.0)))
-
-    return history
-
-
 @router.post("/meals", response_model=MealLogResponse, status_code=status.HTTP_201_CREATED)
 def create_meal(
     meal_in: MealLogCreate,
@@ -326,7 +291,8 @@ def read_fitness_summary(
         gym_streak=streak,
         today_calories_eaten=today_calories_eaten,
         today_calories_burned=today_calories_burned,
-        target_calories=2200.0,
+        target_calories=current_user.target_calories,
+        target_protein=current_user.target_protein,
         macro_totals=MacroTotals(protein=protein, carbs=carbs, fat=fat),
         weight_history=weights,
         recent_workouts=recent

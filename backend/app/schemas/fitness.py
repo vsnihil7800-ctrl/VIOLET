@@ -65,12 +65,8 @@ class FitnessSummary(BaseModel):
     gym_streak: int
     today_calories_eaten: float
     today_calories_burned: float
-    target_calories: float = 2200.0  # standard target calorie limit
+    target_calories: float = 3000.0  # user's daily calorie goal
+    target_protein: float = 110.0  # user's daily protein goal in grams
     macro_totals: MacroTotals
     weight_history: List[WeightLogResponse]
     recent_workouts: List[WorkoutLogResponse]
-
-
-class DailyCalories(BaseModel):
-    date: str  # "YYYY-MM-DD"
-    calories: float

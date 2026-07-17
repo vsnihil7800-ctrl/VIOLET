@@ -39,7 +39,13 @@ def update_user_me(
         current_user.hashed_password = get_password_hash(user_in.password)
         # Invalidate current session on password change to trigger re-auth
         current_user.hashed_refresh_token = None
-        
+
+    if user_in.target_calories is not None:
+        current_user.target_calories = user_in.target_calories
+
+    if user_in.target_protein is not None:
+        current_user.target_protein = user_in.target_protein
+
     db.commit()
     db.refresh(current_user)
     return current_user

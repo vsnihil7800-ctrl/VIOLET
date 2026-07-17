@@ -10,6 +10,13 @@ class CalendarEventCreate(BaseModel):
     end_time: datetime
     color: str = Field("indigo", description="indigo, emerald, amber, rose, slate")
 
+class CalendarEventUpdate(BaseModel):
+    title: Optional[str] = Field(None, min_length=1)
+    description: Optional[str] = None
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    color: Optional[str] = None
+
 class CalendarEventResponse(CalendarEventCreate):
     id: str
     user_id: str
@@ -22,6 +29,10 @@ class CalendarEventResponse(CalendarEventCreate):
 class ReminderCreate(BaseModel):
     title: str = Field(..., min_length=1, description="Reminder Details")
     time: datetime
+
+class ReminderUpdate(BaseModel):
+    title: Optional[str] = Field(None, min_length=1)
+    time: Optional[datetime] = None
 
 class ReminderResponse(ReminderCreate):
     id: str

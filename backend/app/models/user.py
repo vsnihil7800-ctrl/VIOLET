@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Boolean, Column, DateTime, String
+from sqlalchemy import Boolean, Column, DateTime, String, Float
 from app.core.database import Base
 
 class User(Base):
@@ -13,6 +13,8 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     is_superuser = Column(Boolean, default=False)
     hashed_refresh_token = Column(String, nullable=True)
+    target_calories = Column(Float, nullable=False, default=3000.0, server_default="3000.0")
+    target_protein = Column(Float, nullable=False, default=110.0, server_default="110.0")
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(
         DateTime, 

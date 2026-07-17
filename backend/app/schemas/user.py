@@ -15,6 +15,8 @@ class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
     full_name: Optional[str] = None
     password: Optional[str] = Field(None, min_length=8)
+    target_calories: Optional[float] = Field(None, gt=0, description="Daily calorie goal")
+    target_protein: Optional[float] = Field(None, gt=0, description="Daily protein goal in grams")
 
 class UserPasswordReset(BaseModel):
     email: EmailStr
@@ -25,6 +27,8 @@ class UserPasswordResetConfirm(BaseModel):
 
 class UserResponse(UserBase):
     id: str
+    target_calories: float
+    target_protein: float
     created_at: datetime
     updated_at: datetime
 

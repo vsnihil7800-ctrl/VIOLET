@@ -6,6 +6,7 @@ import {
   Clock,
   Plus,
   Trash2,
+  Pencil,
   Loader2,
   ChevronLeft,
   ChevronRight,
@@ -49,6 +50,7 @@ export const Schedule: React.FC = () => {
 
   // Modals & inputs state
   const [isEventOpen, setIsEventOpen] = useState(false);
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
 
   // New Event Form State
   const [eventTitle, setEventTitle] = useState("");
@@ -63,6 +65,7 @@ export const Schedule: React.FC = () => {
   const [reminderTitle, setReminderTitle] = useState("");
   const [reminderTime, setReminderTime] = useState("");
   const [isRemSaving, setIsRemSaving] = useState(false);
+  const [editingReminderId, setEditingReminderId] = useState<string | null>(null);
 
   // ----------------- API QUERIES -----------------
 
@@ -103,6 +106,25 @@ export const Schedule: React.FC = () => {
     }
   });
 
+  // Update Event
+  const updateEventMutation = useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: any }) =>
+      api.put(`/schedule/events/${id}`, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["scheduleEvents"] });
+      setIsEventOpen(false);
+      setEditingEventId(null);
+      setEventTitle("");
+      setEventDesc("");
+      setEventError(null);
+      setIsEventSaving(false);
+    },
+    onError: (err: any) => {
+      setEventError(err.response?.data?.detail || "Failed to update event.");
+      setIsEventSaving(false);
+    }
+  });
+
   // Delete Event
   const deleteEventMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/schedule/events/${id}`),
@@ -118,6 +140,19 @@ export const Schedule: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ["scheduleReminders"] });
       setReminderTitle("");
       setReminderTime("");
+      setIsRemSaving(false);
+    },
+  });
+
+  // Update Reminder
+  const updateReminderMutation = useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: any }) =>
+      api.put(`/schedule/reminders/${id}`, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["scheduleReminders"] });
+      setReminderTitle("");
+      setReminderTime("");
+      setEditingReminderId(null);
       setIsRemSaving(false);
     },
   });
@@ -154,6 +189,10 @@ export const Schedule: React.FC = () => {
     // Pre-fill Event DateTime Picker: "YYYY-MM-DDT09:00"
     const startStr = `${navYear}-${String(navMonth + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}T09:00`;
     const endStr = `${navYear}-${String(navMonth + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}T10:00`;
+    setEditingEventId(null);
+    setEventTitle("");
+    setEventDesc("");
+    setEventColor("indigo");
     setEventStart(startStr);
     setEventEnd(endStr);
     setEventError(null);
@@ -168,13 +207,36 @@ export const Schedule: React.FC = () => {
       return;
     }
     setIsEventSaving(true);
-    createEventMutation.mutate({
+    const payload = {
       title: eventTitle.trim(),
       description: eventDesc.trim() || null,
       start_time: new Date(eventStart).toISOString(),
       end_time: new Date(eventEnd).toISOString(),
       color: eventColor,
-    });
+    };
+    if (editingEventId) {
+      updateEventMutation.mutate({ id: editingEventId, payload });
+    } else {
+      createEventMutation.mutate(payload);
+    }
+  };
+
+  const handleEditEvent = (ev: CalendarEvent, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingEventId(ev.id);
+    setEventTitle(ev.title);
+    setEventDesc(ev.description || "");
+    // Convert stored ISO (UTC) back into the "YYYY-MM-DDTHH:mm" shape datetime-local inputs expect, in local time
+    const toLocalInputValue = (iso: string) => {
+      const d = new Date(iso);
+      const pad = (n: number) => String(n).padStart(2, "0");
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    };
+    setEventStart(toLocalInputValue(ev.start_time));
+    setEventEnd(toLocalInputValue(ev.end_time));
+    setEventColor(ev.color);
+    setEventError(null);
+    setIsEventOpen(true);
   };
 
   const handleDeleteEvent = (id: string, e: React.MouseEvent) => {
@@ -188,10 +250,32 @@ export const Schedule: React.FC = () => {
     e.preventDefault();
     if (!reminderTitle.trim() || !reminderTime) return;
     setIsRemSaving(true);
-    createReminderMutation.mutate({
+    const payload = {
       title: reminderTitle.trim(),
       time: new Date(reminderTime).toISOString(),
-    });
+    };
+    if (editingReminderId) {
+      updateReminderMutation.mutate({ id: editingReminderId, payload });
+    } else {
+      createReminderMutation.mutate(payload);
+    }
+  };
+
+  const handleEditReminder = (rem: Reminder) => {
+    const toLocalInputValue = (iso: string) => {
+      const d = new Date(iso);
+      const pad = (n: number) => String(n).padStart(2, "0");
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    };
+    setEditingReminderId(rem.id);
+    setReminderTitle(rem.title);
+    setReminderTime(toLocalInputValue(rem.time));
+  };
+
+  const handleCancelReminderEdit = () => {
+    setEditingReminderId(null);
+    setReminderTitle("");
+    setReminderTime("");
   };
 
   const handleDeleteReminder = (id: string) => {
@@ -347,14 +431,25 @@ export const Schedule: React.FC = () => {
                   className="w-full px-3 py-2 bg-background border border-border rounded-lg outline-none text-xs"
                 />
               </div>
-              <button
-                type="submit"
-                disabled={isRemSaving}
-                className="w-full py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/95 text-xs flex items-center justify-center gap-1 shadow"
-              >
-                {isRemSaving ? <Loader2 size={12} className="animate-spin" /> : <Plus size={14} />}
-                Schedule Alert
-              </button>
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={isRemSaving}
+                  className="flex-1 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/95 text-xs flex items-center justify-center gap-1 shadow"
+                >
+                  {isRemSaving ? <Loader2 size={12} className="animate-spin" /> : <Plus size={14} />}
+                  {editingReminderId ? "Save Changes" : "Schedule Alert"}
+                </button>
+                {editingReminderId && (
+                  <button
+                    type="button"
+                    onClick={handleCancelReminderEdit}
+                    className="px-3 py-2 border border-border hover:bg-secondary rounded-lg text-xs font-semibold"
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
             </form>
           </div>
 
@@ -381,6 +476,12 @@ export const Schedule: React.FC = () => {
                         {new Date(rem.time).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                       </span>
                     </div>
+                    <button
+                      onClick={() => handleEditReminder(rem)}
+                      className="p-1 text-muted-foreground hover:text-primary hover:bg-secondary/40 rounded transition-colors"
+                    >
+                      <Pencil size={12} />
+                    </button>
                     <button
                       onClick={() => handleDeleteReminder(rem.id)}
                       className="p-1 text-muted-foreground hover:text-destructive hover:bg-secondary/40 rounded transition-colors"
@@ -420,6 +521,7 @@ export const Schedule: React.FC = () => {
                   <th className="py-2.5">Start Time</th>
                   <th className="py-2.5">End Time</th>
                   <th className="py-2.5 hidden sm:table-cell">Details / Description</th>
+                  <th className="py-2.5 text-right">Edit</th>
                   <th className="py-2.5 text-right">Delete</th>
                 </tr>
               </thead>
@@ -448,6 +550,14 @@ export const Schedule: React.FC = () => {
                     </td>
                     <td className="py-2.5 text-right">
                       <button
+                        onClick={(e) => handleEditEvent(ev, e)}
+                        className="p-1 text-muted-foreground hover:text-primary hover:bg-secondary/40 rounded transition-colors"
+                      >
+                        <Pencil size={13} />
+                      </button>
+                    </td>
+                    <td className="py-2.5 text-right">
+                      <button
                         onClick={(e) => handleDeleteEvent(ev.id, e)}
                         className="p-1 text-muted-foreground hover:text-destructive hover:bg-secondary/40 rounded transition-colors"
                       >
@@ -469,8 +579,8 @@ export const Schedule: React.FC = () => {
             
             {/* Header */}
             <div className="flex justify-between items-center px-6 py-4 border-b border-border">
-              <h3 className="font-bold text-lg">Block Calendar Schedule</h3>
-              <button onClick={() => setIsEventOpen(false)} className="p-1 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground">
+              <h3 className="font-bold text-lg">{editingEventId ? "Edit Calendar Event" : "Block Calendar Schedule"}</h3>
+              <button onClick={() => { setIsEventOpen(false); setEditingEventId(null); }} className="p-1 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground">
                 <X size={18} />
               </button>
             </div>
@@ -562,7 +672,7 @@ export const Schedule: React.FC = () => {
               <div className="flex gap-3 justify-end pt-2 border-t border-border/80">
                 <button
                   type="button"
-                  onClick={() => setIsEventOpen(false)}
+                  onClick={() => { setIsEventOpen(false); setEditingEventId(null); }}
                   className="py-2 px-4 border border-border hover:bg-secondary rounded-lg text-xs font-semibold"
                 >
                   Cancel
@@ -573,7 +683,7 @@ export const Schedule: React.FC = () => {
                   className="py-2 px-4 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/95 text-xs flex items-center gap-1.5 shadow"
                 >
                   {isEventSaving ? <Loader2 className="animate-spin" size={14} /> : null}
-                  Schedule Event
+                  {editingEventId ? "Save Changes" : "Schedule Event"}
                 </button>
               </div>
 
