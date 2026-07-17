@@ -18,7 +18,8 @@ import {
   Moon,
   User as UserIcon,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  NotebookText
 } from "lucide-react";
 import { api } from "../../services/api";
 
@@ -49,6 +50,7 @@ export const DashboardLayout: React.FC = () => {
     { name: "Productivity", path: "/productivity", icon: CheckSquare },
     { name: "Schedule & Reminders", path: "/schedule", icon: Calendar },
     { name: "Document Vault", path: "/vault", icon: FolderLock },
+    { name: "Notes", path: "/notes", icon: NotebookText },
     { name: "Violet AI Chat", path: "/assistant", icon: Sparkles, highlight: true },
   ];
 

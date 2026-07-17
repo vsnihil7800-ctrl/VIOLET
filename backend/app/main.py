@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
 
-from app.api.endpoints import auth, users, finance, investments, fitness, productivity, schedule, ai, assistant
+from app.api.endpoints import auth, users, finance, investments, fitness, productivity, schedule, ai, assistant, notes
 from app.core.config import settings
 from app.core.database import Base, engine
 
@@ -17,7 +17,7 @@ app = FastAPI(
 )
 
 # Mount static files for uploaded food images
-uploads_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
+uploads_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "uploads")
 os.makedirs(uploads_path, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=uploads_path), name="uploads")
 
@@ -46,6 +46,7 @@ app.include_router(productivity.router, prefix=f"{settings.API_V1_STR}/productiv
 app.include_router(schedule.router, prefix=f"{settings.API_V1_STR}/schedule", tags=["schedule"])
 app.include_router(ai.router, prefix=f"{settings.API_V1_STR}/ai", tags=["ai"])
 app.include_router(assistant.router, prefix=f"{settings.API_V1_STR}/assistant", tags=["assistant"])
+app.include_router(notes.router, prefix=f"{settings.API_V1_STR}/notes", tags=["notes"])
 
 @app.get("/")
 def root():

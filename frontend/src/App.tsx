@@ -16,6 +16,7 @@ import { Productivity } from "./pages/Productivity";
 import { Schedule } from "./pages/Schedule";
 import { Vault } from "./pages/Vault";
 import { Assistant } from "./pages/Assistant";
+import { Notes } from "./pages/Notes";
 import { DashboardLayout } from "./components/Layout/DashboardLayout";
 
 // Initialize TanStack React Query client
@@ -104,6 +105,7 @@ function App() {
               <Route path="schedule" element={<Schedule />} />
               <Route path="vault" element={<Vault />} />
               <Route path="assistant" element={<Assistant />} />
+              <Route path="notes" element={<Notes />} />
             </Route>
 
             {/* Fallback */}
