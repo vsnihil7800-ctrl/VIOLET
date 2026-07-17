@@ -17,7 +17,8 @@ app = FastAPI(
 )
 
 # Mount static files for uploaded food images
-uploads_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")os.makedirs(uploads_path, exist_ok=True)
+uploads_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
+os.makedirs(uploads_path, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=uploads_path), name="uploads")
 
 # CORS configurations
